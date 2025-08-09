@@ -1,0 +1,25 @@
+<div class="section">
+    <div class="section-title">Projects</div>
+    <div class="section-content">
+        {% for proj in section.entries %}
+        <div class="item">
+            <div class="item-header">
+                <div class="item-title">{{ proj.name }}</div>
+                <div class="item-date">{{ proj.duration or '' }}</div>
+            </div>
+            {% if proj.technologies %}
+            <div class="item-subtitle">Technologies: {{ proj.technologies }}</div>
+            {% endif %}
+            {% if proj.description %}
+            <div class="item-body">
+                <ul>
+                    {% for point in proj.description.split('\n') if point.strip() %}
+                    <li>{{ point.strip().lstrip('•').strip() }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>

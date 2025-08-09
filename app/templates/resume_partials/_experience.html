@@ -1,0 +1,23 @@
+<div class="section">
+    <div class="section-title">Professional Experience</div>
+    <div class="section-content">
+        {% for exp in section.entries %}
+        <div class="item">
+            <div class="item-header">
+                <div class="item-title">{{ exp.title }}</div>
+                <div class="item-date">{{ exp.duration }}</div>
+            </div>
+            <div class="item-subtitle">{{ exp.company }}</div>
+            {% if exp.responsibilities %}
+            <div class="item-body">
+                <ul>
+                    {% for point in exp.responsibilities.split('\n') if point.strip() %}
+                    <li>{{ point.strip().lstrip('•').strip() }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>

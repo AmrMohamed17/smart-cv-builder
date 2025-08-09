@@ -1,0 +1,12 @@
+<div class="section">
+    <div class="section-title">{{ section.title }}</div>
+    <div class="section-content">
+        <div class="item-body">
+            <ul>
+                {% for point in section.content.split('\n') if point.strip() %}
+                <li>{{ point.strip().lstrip('•').strip() }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>

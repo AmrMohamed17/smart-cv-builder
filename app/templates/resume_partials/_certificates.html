@@ -1,0 +1,23 @@
+<div class="section">
+    <div class="section-title">Certifications</div>
+    <div class="section-content">
+        {% for cert in section.entries %}
+        <div class="item">
+            <div class="item-header">
+                <div class="item-title">{{ cert.name }}</div>
+                <div class="item-date">{{ cert.year }}</div>
+            </div>
+            <div class="item-subtitle">{{ cert.issuer }}</div>
+            {% if cert.description %}
+            <div class="item-body">
+                <ul>
+                    {% for point in cert.description.split('\n') if point.strip() %}
+                    <li>{{ point.strip().lstrip('•').strip() }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+</div>

@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CVBuilder - Smart Resume Builder</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .floating-elements {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            z-index: 1;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 8s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) {
+            top: 20%;
+            left: 10%;
+            width: 60px;
+            height: 60px;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            top: 60%;
+            right: 15%;
+            width: 40px;
+            height: 40px;
+            animation-delay: 3s;
+        }
+
+        .floating-element:nth-child(3) {
+            bottom: 30%;
+            left: 20%;
+            width: 80px;
+            height: 80px;
+            animation-delay: 6s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-30px) rotate(180deg); opacity: 0.8; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            padding: 3rem;
+            max-width: 600px;
+            width: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+            z-index: 2;
+            transform: translateY(20px);
+            animation: slideUp 0.8s ease-out forwards;
+        }
+
+        @keyframes slideUp {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #667eea, #764ba2, #f093fb, #f5576c);
+            background-size: 300% 100%;
+            animation: gradient 3s ease infinite;
+        }
+
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        .progress-container {
+            margin-bottom: 2rem;
+            position: relative;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(102, 126, 234, 0.2);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 4px;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            100% { left: 100%; }
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #718096;
+        }
+
+        .step-indicator .current-step {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        .page {
+            display: none;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 2.5rem;
+        }
+
+        .page-title {
+            color: #2d3748;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .page-subtitle {
+            color: #718096;
+            font-size: 1.1rem;
+            font-weight: 400;
+        }
+
+        .form-group {
+            margin-bottom: 2rem;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .label-icon {
+            color: #667eea;
+            font-size: 1.2rem;
+        }
+
+        input[type="text"], input[type="url"] {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 1rem;
+            background: #f7fafc;
+            transition: all 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus, input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-display {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 12px;
+            padding: 2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .file-input-display:hover {
+            border-color: #667eea;
+            background: #edf2f7;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+        }
+
+        .file-input-display.drag-over {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            transform: scale(1.02);
+        }
+
+        .file-icon {
+            font-size: 2.5rem;
+            color: #a0aec0;
+            margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .file-input-display:hover .file-icon {
+            color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .file-text {
+            color: #4a5568;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-subtext {
+            color: #718096;
+            font-size: 0.875rem;
+        }
+
+        .file-selected {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            border-color: #667eea;
+        }
+
+        .experience-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .experience-option {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .experience-option:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.1);
+        }
+
+        .experience-option.selected {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+        }
+
+        .experience-icon {
+            font-size: 2rem;
+            color: #a0aec0;
+            margin-bottom: 0.75rem;
+            transition: all 0.3s ease;
+        }
+
+        .experience-option:hover .experience-icon,
+        .experience-option.selected .experience-icon {
+            color: #667eea;
+            transform: scale(1.1);
+        }
+
+        .experience-title {
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 1.1rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .experience-desc {
+            color: #718096;
+            font-size: 0.875rem;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 2.5rem;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 1rem 2rem;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: none;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-decoration: none;
+        }
+
+        .btn-secondary {
+            background: #f7fafc;
+            color: #4a5568;
+            border: 2px solid #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+            transform: translateY(-1px);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .btn-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 35px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .skip-option {
+            text-align: center;
+            margin-top: 1.5rem;
+        }
+
+        .skip-link {
+            color: #718096;
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.3s ease;
+        }
+
+        .skip-link:hover {
+            color: #667eea;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .feature-card {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            transform: translateY(10px);
+            animation: slideInFeature 0.6s ease-out forwards;
+        }
+
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes slideInFeature {
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+
+        .feature-icon {
+            font-size: 2rem;
+            color: #667eea;
+            margin-bottom: 0.75rem;
+        }
+
+        .feature-title {
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-desc {
+            color: #718096;
+            font-size: 0.875rem;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 2rem;
+                margin: 1rem;
+            }
+
+            .page-title {
+                font-size: 2rem;
+            }
+
+            .experience-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid transparent;
+            border-top: 2px solid currentColor;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .final-summary {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-left: 4px solid #667eea;
+        }
+
+        .summary-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .summary-item:last-child {
+            border-bottom: none;
+            margin-bottom: 0;
+        }
+
+        .summary-label {
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .summary-value {
+            color: #667eea;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="floating-elements">
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+        <div class="floating-element"></div>
+    </div>
+
+    <div class="container">
+        <div class="progress-container">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="step-indicator">
+                <span class="current-step" id="currentStep">Step 1 of 6</span>
+                <span id="stepDescription">Welcome</span>
+            </div>
+        </div>
+
+        <!-- Page 1: Welcome -->
+        <div class="page active" id="page1">
+            <div class="page-header">
+                <h1 class="page-title">Welcome to CVBuilder</h1>
+                <p class="page-subtitle">Create a professional resume tailored to your dream job</p>
+            </div>
+            
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-brain"></i></div>
+                    <div class="feature-title">AI-Powered</div>
+                    <div class="feature-desc">Smart resume optimization using advanced AI</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-rocket"></i></div>
+                    <div class="feature-title">Quick Setup</div>
+                    <div class="feature-desc">Get started in just a few minutes</div>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon"><i class="fas fa-star"></i></div>
+                    <div class="feature-title">Professional</div>
+                    <div class="feature-desc">Stand out with modern, ATS-friendly designs</div>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <div></div>
+                <button class="btn btn-primary" onclick="nextPage()">
+                    Let's Get Started <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+        <div class="page" id="page2">
+            <div class="page-header">
+                <h2 class="page-title">Tell us about your target role</h2>
+                <p class="page-subtitle">Help us tailor your resume for the perfect position</p>
+            </div>
+
+            <div class="form-group">
+                <label for="jobTitle">
+                    <i class="fas fa-briefcase label-icon"></i>
+                    Job Title
+                </label>
+                <input type="text" id="jobTitle" placeholder="e.g. Frontend Developer, Data Scientist, Product Manager" required>
+            </div>
+
+            <div class="form-group">
+                <label>
+                    <i class="fas fa-chart-line label-icon"></i>
+                    Experience Level
+                </label>
+                <div class="experience-grid">
+                    <div class="experience-option" data-level="intern">
+                        <div class="experience-icon"><i class="fas fa-seedling"></i></div>
+                        <div class="experience-title">Intern</div>
+                        <div class="experience-desc">0-1 years</div>
+                    </div>
+                    <div class="experience-option" data-level="junior">
+                        <div class="experience-icon"><i class="fas fa-user-graduate"></i></div>
+                        <div class="experience-title">Junior</div>
+                        <div class="experience-desc">1-3 years</div>
+                    </div>
+                    <div class="experience-option" data-level="mid">
+                        <div class="experience-icon"><i class="fas fa-user-tie"></i></div>
+                        <div class="experience-title">Mid-Level</div>
+                        <div class="experience-desc">3-6 years</div>
+                    </div>
+                    <div class="experience-option" data-level="senior">
+                        <div class="experience-icon"><i class="fas fa-crown"></i></div>
+                        <div class="experience-title">Senior</div>
+                        <div class="experience-desc">6+ years</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button class="btn btn-secondary" onclick="previousPage()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="btn btn-primary" onclick="nextPage()" id="page2Next" disabled>
+                    Continue <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 3: CV Upload -->
+        <div class="page" id="page3">
+            <div class="page-header">
+                <h2 class="page-title">Upload your current resume</h2>
+                <p class="page-subtitle">We'll analyze your existing experience and skills</p>
+            </div>
+
+            <div class="form-group">
+                <label for="cvFile">
+                    <i class="fas fa-file-pdf label-icon"></i>
+                    Resume (PDF or DOCX)
+                </label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="cvFile" accept=".pdf,.docx" required>
+                    <div class="file-input-display" data-input="cvFile">
+                        <i class="fas fa-cloud-upload-alt file-icon"></i>
+                        <div class="file-text">Drop your resume here or click to browse</div>
+                        <div class="file-subtext">Supports PDF and DOCX files up to 10MB</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button class="btn btn-secondary" onclick="previousPage()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="btn btn-primary" onclick="nextPage()" id="page3Next" disabled>
+                    Continue <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 4: LinkedIn Profile -->
+        <div class="page" id="page4">
+            <div class="page-header">
+                <h2 class="page-title">LinkedIn Profile</h2>
+                <p class="page-subtitle">Upload your LinkedIn profile as a PDF (optional)</p>
+            </div>
+
+            <div class="form-group">
+                <label for="linkedinFile">
+                    <i class="fab fa-linkedin label-icon"></i>
+                    LinkedIn Profile (PDF)
+                </label>
+                <div class="file-input-wrapper">
+                    <input type="file" id="linkedinFile" accept=".pdf">
+                    <div class="file-input-display" data-input="linkedinFile">
+                        <i class="fas fa-cloud-upload-alt file-icon"></i>
+                        <div class="file-text">Drop your LinkedIn PDF here or click to browse</div>
+                        <div class="file-subtext">PDF format only (optional)</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="skip-option">
+                <a href="#" class="skip-link" onclick="skipPage()">
+                    <i class="fas fa-forward"></i> Skip this step
+                </a>
+            </div>
+
+            <div class="navigation">
+                <button class="btn btn-secondary" onclick="previousPage()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="btn btn-primary" onclick="nextPage()">
+                    Continue <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 5: GitHub Username -->
+        <div class="page" id="page5">
+            <div class="page-header">
+                <h2 class="page-title">GitHub Profile</h2>
+                <p class="page-subtitle">Showcase your coding projects and contributions</p>
+            </div>
+
+            <div class="form-group">
+                <label for="githubUsername">
+                    <i class="fab fa-github label-icon"></i>
+                    GitHub Username
+                </label>
+                <input type="text" id="githubUsername" placeholder="your-github-username">
+            </div>
+
+            <div class="skip-option">
+                <a href="#" class="skip-link" onclick="skipPage()">
+                    <i class="fas fa-forward"></i> Skip this step
+                </a>
+            </div>
+
+            <div class="navigation">
+                <button class="btn btn-secondary" onclick="previousPage()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="btn btn-primary" onclick="nextPage()">
+                    Continue <i class="fas fa-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Page 6: Final Summary -->
+        <div class="page" id="page6">
+            <div class="page-header">
+                <h2 class="page-title">Ready to build your resume?</h2>
+                <p class="page-subtitle">Review your information and start the magic</p>
+            </div>
+
+            <div class="final-summary" id="finalSummary">
+                <!-- Summary will be populated by JavaScript -->
+            </div>
+
+            <div class="navigation">
+                <button class="btn btn-secondary" onclick="previousPage()">
+                    <i class="fas fa-arrow-left"></i> Back
+                </button>
+                <button class="btn btn-primary" onclick="submitForm()" id="submitBtn">
+                    <span class="loading-spinner" id="loadingSpinner"></span>
+                    <span id="submitText">Build My Resume</span>
+                    <i class="fas fa-magic" id="submitIcon"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentPageNum = 1;
+        const totalPages = 6;
+        let formData = {
+            jobTitle: '',
+            experienceLevel: '',
+            cvFile: null,
+            linkedinFile: null,
+            githubUsername: ''
+        };
+
+        // Progress tracking
+        function updateProgress() {
+            const progress = (currentPageNum / totalPages) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+            document.getElementById('currentStep').textContent = `Step ${currentPageNum} of ${totalPages}`;
+            
+            const stepDescriptions = ['Welcome', 'Job Info', 'Resume Upload', 'LinkedIn', 'GitHub', 'Review'];
+            document.getElementById('stepDescription').textContent = stepDescriptions[currentPageNum - 1];
+        }
+
+        // Navigation functions
+        function nextPage() {
+            if (validateCurrentPage()) {
+                if (currentPageNum < totalPages) {
+                    document.getElementById(`page${currentPageNum}`).classList.remove('active');
+                    currentPageNum++;
+                    document.getElementById(`page${currentPageNum}`).classList.add('active');
+                    updateProgress();
+                    
+                    if (currentPageNum === 6) {
+                        populateFinalSummary();
+                    }
+                }
+            }
+        }
+
+        function previousPage() {
+            if (currentPageNum > 1) {
+                document.getElementById(`page${currentPageNum}`).classList.remove('active');
+                currentPageNum--;
+                document.getElementById(`page${currentPageNum}`).classList.add('active');
+                updateProgress();
+            }
+        }
+
+        function skipPage() {
+            nextPage();
+        }
+
+        // Validation
+        function validateCurrentPage() {
+            switch(currentPageNum) {
+                case 1:
+                    return true; // Welcome page
+                case 2:
+                    const jobTitle = document.getElementById('jobTitle').value.trim();
+                    const experienceLevel = document.querySelector('.experience-option.selected');
+                    if (!jobTitle || !experienceLevel) {
+                        alert('Please fill in both job title and experience level.');
+                        return false;
+                    }
+                    formData.jobTitle = jobTitle;
+                    formData.experienceLevel = experienceLevel.dataset.level;
+                    return true;
+                case 3:
+                    const cvFile = document.getElementById('cvFile').files[0];
+                    if (!cvFile) {
+                        alert('Please upload your resume.');
+                        return false;
+                    }
+                    formData.cvFile = cvFile;
+                    return true;
+                case 4:
+                    const linkedinFile = document.getElementById('linkedinFile').files[0];
+                    formData.linkedinFile = linkedinFile;
+                    return true; // Optional field
+                case 5:
+                    const githubUsername = document.getElementById('githubUsername').value.trim();
+                    formData.githubUsername = githubUsername;
+                    return true; // Optional field
+                default:
+                    return true;
+            }
+        }
+
+        // Experience level selection
+        document.querySelectorAll('.experience-option').forEach(option => {
+            option.addEventListener('click', function() {
+                document.querySelectorAll('.experience-option').forEach(opt => opt.classList.remove('selected'));
+                this.classList.add('selected');
+                document.getElementById('page2Next').disabled = !document.getElementById('jobTitle').value.trim();
+            });
+        });
+
+        // Job title input validation
+        document.getElementById('jobTitle').addEventListener('input', function() {
+            const hasTitle = this.value.trim();
+            const hasLevel = document.querySelector('.experience-option.selected');
+            document.getElementById('page2Next').disabled = !(hasTitle && hasLevel);
+        });
+
+        // File upload handling
+        const cvFileInput = document.getElementById('cvFile');
+        const cvDisplay = document.querySelector('[data-input="cvFile"]');
+        const linkedinFileInput = document.getElementById('linkedinFile');
+        const linkedinDisplay = document.querySelector('[data-input="linkedinFile"]');
+
+        cvDisplay.addEventListener('click', () => cvFileInput.click());
+        linkedinDisplay.addEventListener('click', () => linkedinFileInput.click());
+
+        cvFileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const fileName = this.files[0].name;
+                cvDisplay.classList.add('file-selected');
+                cvDisplay.querySelector('.file-text').textContent = fileName;
+                cvDisplay.querySelector('.file-subtext').textContent = 'File selected successfully';
+                cvDisplay.querySelector('.file-icon').className = 'fas fa-check-circle file-icon';
+                document.getElementById('page3Next').disabled = false;
+            }
+        });
+
+        linkedinFileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                const fileName = this.files[0].name;
+                linkedinDisplay.classList.add('file-selected');
+                linkedinDisplay.querySelector('.file-text').textContent = fileName;
+                linkedinDisplay.querySelector('.file-subtext').textContent = 'File selected successfully';
+                linkedinDisplay.querySelector('.file-icon').className = 'fas fa-check-circle file-icon';
+            }
+        });
+
+        // Drag and drop for file upload
+        cvDisplay.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+
+        cvDisplay.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+        });
+
+        cvDisplay.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                cvFileInput.files = files;
+                cvFileInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // LinkedIn file drag and drop
+        linkedinDisplay.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            this.classList.add('drag-over');
+        });
+
+        linkedinDisplay.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+        });
+
+        linkedinDisplay.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                linkedinFileInput.files = files;
+                linkedinFileInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+        cvDisplay.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.classList.remove('drag-over');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                cvFileInput.files = files;
+                cvFileInput.dispatchEvent(new Event('change'));
+            }
+        });
+
+        // GitHub username validation
+        document.getElementById('githubUsername').addEventListener('input', function() {
+            const value = this.value.trim();
+            if (value && !/^[a-zA-Z0-9-]+$/.test(value)) {
+                this.setCustomValidity('Username can only contain letters, numbers, and hyphens');
+            } else {
+                this.setCustomValidity('');
+            }
+        });
+
+        // Populate final summary
+        function populateFinalSummary() {
+            const summary = document.getElementById('finalSummary');
+            let summaryHTML = '<h3 style="margin-bottom: 1rem; color: #2d3748;">Summary</h3>';
+            
+            summaryHTML += `
+                <div class="summary-item">
+                    <span class="summary-label">Job Title:</span>
+                    <span class="summary-value">${formData.jobTitle}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Experience Level:</span>
+                    <span class="summary-value">${formData.experienceLevel.charAt(0).toUpperCase() + formData.experienceLevel.slice(1)}</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Resume:</span>
+                    <span class="summary-value">${formData.cvFile ? formData.cvFile.name : 'Not uploaded'}</span>
+                </div>
+            `;
+            
+            if (formData.linkedinFile) {
+                summaryHTML += `
+                    <div class="summary-item">
+                        <span class="summary-label">LinkedIn:</span>
+                        <span class="summary-value">${formData.linkedinFile.name}</span>
+                    </div>
+                `;
+            }
+            
+            if (formData.githubUsername) {
+                summaryHTML += `
+                    <div class="summary-item">
+                        <span class="summary-label">GitHub:</span>
+                        <span class="summary-value">@${formData.githubUsername}</span>
+                    </div>
+                `;
+            }
+            
+            summary.innerHTML = summaryHTML;
+        }
+
+        // Submit form
+        async function submitForm() {
+            const submitBtn = document.getElementById('submitBtn');
+            const submitText = document.getElementById('submitText');
+            const submitIcon = document.getElementById('submitIcon');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+            
+            // Show loading state
+            submitBtn.disabled = true;
+            submitText.textContent = 'Processing...';
+            submitIcon.style.display = 'none';
+            loadingSpinner.style.display = 'inline-block';
+            
+            try {
+                // Create FormData object
+                const formDataToSend = new FormData();
+                formDataToSend.append('cv', formData.cvFile);
+                formDataToSend.append('job_title', formData.jobTitle);
+                formDataToSend.append('experience_level', formData.experienceLevel);
+                
+                if (formData.linkedinFile) {
+                    formDataToSend.append('linkedin', formData.linkedinFile);
+                }
+                
+                if (formData.githubUsername) {
+                    formDataToSend.append('github', formData.githubUsername);
+                }
+                
+                // Make the actual API call to your Flask route
+                const response = await fetch('/', {
+                    method: 'POST',
+                    body: formDataToSend
+                });
+                
+                if (response.ok) {
+                    // Check if response is a redirect
+                    if (response.redirected) {
+                        window.location.href = response.url;
+                    } else {
+                        // Handle successful response
+                        submitText.textContent = 'Success! Redirecting...';
+                        setTimeout(() => {
+                            window.location.href = '/editor';
+                        }, 1000);
+                    }
+                } else {
+                    throw new Error(`Upload failed: ${response.status} ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                console.error('Error submitting form:', error);
+                alert('An error occurred while processing your request. Please try again.');
+                
+                // Reset button state
+                submitBtn.disabled = false;
+                submitText.textContent = 'Build My Resume';
+                submitIcon.style.display = 'inline';
+                loadingSpinner.style.display = 'none';
+            }
+        }
+
+        // Reset form function (for demo purposes)
+        function resetForm() {
+            currentPageNum = 1;
+            formData = {
+                jobTitle: '',
+                experienceLevel: '',
+                cvFile: null,
+                linkedinFile: null,
+                githubUsername: ''
+            };
+            
+            // Reset all form fields
+            document.getElementById('jobTitle').value = '';
+            document.getElementById('githubUsername').value = '';
+            document.getElementById('cvFile').value = '';
+            document.getElementById('linkedinFile').value = '';
+            
+            // Reset experience selection
+            document.querySelectorAll('.experience-option').forEach(opt => opt.classList.remove('selected'));
+            
+            // Reset file displays
+            const cvDisplay = document.querySelector('[data-input="cvFile"]');
+            const linkedinDisplay = document.querySelector('[data-input="linkedinFile"]');
+            
+            cvDisplay.classList.remove('file-selected');
+            cvDisplay.querySelector('.file-text').textContent = 'Drop your resume here or click to browse';
+            cvDisplay.querySelector('.file-subtext').textContent = 'Supports PDF and DOCX files up to 10MB';
+            cvDisplay.querySelector('.file-icon').className = 'fas fa-cloud-upload-alt file-icon';
+            
+            linkedinDisplay.classList.remove('file-selected');
+            linkedinDisplay.querySelector('.file-text').textContent = 'Drop your LinkedIn PDF here or click to browse';
+            linkedinDisplay.querySelector('.file-subtext').textContent = 'PDF format only (optional)';
+            linkedinDisplay.querySelector('.file-icon').className = 'fas fa-cloud-upload-alt file-icon';
+            
+            // Reset buttons
+            document.getElementById('page2Next').disabled = true;
+            document.getElementById('page3Next').disabled = true;
+            document.getElementById('submitBtn').disabled = false;
+            document.getElementById('submitText').textContent = 'Build My Resume';
+            document.getElementById('submitIcon').style.display = 'inline';
+            document.getElementById('loadingSpinner').style.display = 'none';
+            
+            // Go back to first page
+            document.querySelectorAll('.page').forEach(page => page.classList.remove('active'));
+            document.getElementById('page1').classList.add('active');
+            updateProgress();
+        }
+
+        // Smooth container animation on mouse move
+        document.addEventListener('mousemove', function(e) {
+            const container = document.querySelector('.container');
+            const rect = container.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            
+            const rotateX = (y - centerY) / centerY * 1;
+            const rotateY = (centerX - x) / centerX * 1;
+            
+            container.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        });
+
+        document.addEventListener('mouseleave', function() {
+            document.querySelector('.container').style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg)';
+        });
+
+        // Initialize progress on page load
+        updateProgress();
+
+        // Add keyboard navigation
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                const activeNextBtn = document.querySelector('.page.active .btn-primary:not(:disabled)');
+                if (activeNextBtn) {
+                    e.preventDefault();
+                    activeNextBtn.click();
+                }
+            } else if (e.key === 'Escape') {
+                if (currentPageNum > 1) {
+                    previousPage();
+                }
+            }
+        });
+
+        // Auto-save functionality (optional)
+        function autoSave() {
+            const autoSaveData = {
+                jobTitle: document.getElementById('jobTitle').value,
+                experienceLevel: document.querySelector('.experience-option.selected')?.dataset.level || '',
+                githubUsername: document.getElementById('githubUsername').value,
+                hasLinkedinFile: document.getElementById('linkedinFile').files.length > 0,
+                hasCvFile: document.getElementById('cvFile').files.length > 0
+            };
+            
+            // Note: localStorage is not available in Claude artifacts
+            // In a real application, you would save to localStorage or send to server
+            console.log('Auto-saving data:', autoSaveData);
+        }
+
+        // Auto-save every 5 seconds
+        setInterval(autoSave, 5000);
+    </script>
+</body>
+</html>

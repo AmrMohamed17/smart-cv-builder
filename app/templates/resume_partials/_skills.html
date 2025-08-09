@@ -1,0 +1,12 @@
+<div class="section">
+    <div class="section-title">Skills</div>
+    <div class="section-content skills-list">
+        <ul>
+            {% for skill_group in section.entries %}
+                {% if skill_group.category and skill_group.technologies %}
+                <li><strong>{{ skill_group.category }}:</strong> {{ skill_group.technologies }}</li>
+                {% endif %}
+            {% endfor %}
+        </ul>
+    </div>
+</div>
