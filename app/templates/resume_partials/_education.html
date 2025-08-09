@@ -5,7 +5,7 @@
         <div class="item">
             <div class="item-header">
                 <div class="item-title">{{ edu.school }}</div>
-                <div class="item-date">{{ edu.year }}</div>
+                <div class="item-date">{{ edu.date_from or '' }}{% if edu.date_to %} - {{ edu.date_to }}{% endif %}</div>
             </div>
             <div class="item-subtitle">{{ edu.degree }}</div>
             {% if edu.achievements %}

@@ -1,133 +1,232 @@
 // static/js/editor.js
 
-// This function now orchestrates everything.
+document.addEventListener('DOMContentLoaded', () => {
+    initializeDynamicEditor();
+});
+
 function initializeDynamicEditor() {
-    setupSectionControls();
-    setupSortableSections();
-    enhanceForm();
+    setupLayoutEditor();
+    setupDynamicItemControls();
     handleFormSubmission();
+}
+
+// --- 1. LAYOUT EDITOR LOGIC ---
+
+function setupLayoutEditor() {
+    const fab = document.getElementById('fab-open-layout-editor');
+    const modal = document.getElementById('layout-editor-modal');
+    const closeBtn = document.getElementById('btn-close-modal');
+    const addSectionBtn = document.getElementById('btn-add-section');
+
+    if (!fab || !modal || !closeBtn || !addSectionBtn) return;
+
+    fab.addEventListener('click', () => {
+        populateLayoutList();
+        modal.classList.remove('hidden');
+    });
+
+    closeBtn.addEventListener('click', () => modal.classList.add('hidden'));
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) modal.classList.add('hidden');
+    });
     
-    // Add event listeners to all existing "Add Item" buttons on load
-    document.querySelectorAll('.btn-add-item').forEach(button => {
-        button.addEventListener('click', addListItem);
+    addSectionBtn.addEventListener('click', addSectionFromModal);
+}
+
+function populateLayoutList() {
+    const layoutContainer = document.getElementById('layout-list-container');
+    if (!layoutContainer) return;
+    layoutContainer.innerHTML = ''; // Clear current list
+
+    document.querySelectorAll('#section-container > .form-section').forEach(sectionEl => {
+        const id = sectionEl.dataset.sectionId || (sectionEl.dataset.sectionId = `section-${Date.now()}`);
+        let title;
+        if (sectionEl.dataset.sectionType === 'custom') {
+            title = sectionEl.querySelector('.custom-title-input')?.value || 'Custom Section';
+        } else {
+            title = sectionEl.querySelector('.section-header-title').textContent.trim();
+        }
+        
+        const itemHTML = `
+            <div class="layout-item" data-target-id="${id}">
+                <i class="fas fa-grip-vertical layout-item-handle"></i>
+                <span class="flex-grow font-semibold text-gray-700">${title}</span>
+                <button type="button" class="btn-remove-section-from-modal text-gray-400 hover:text-red-500" title="Remove Section"><i class="fas fa-trash"></i></button>
+            </div>
+        `;
+        layoutContainer.insertAdjacentHTML('beforeend', itemHTML);
+    });
+    
+    new Sortable(layoutContainer, {
+        animation: 150,
+        handle: '.layout-item-handle',
+        onEnd: syncMainLayoutFromModal
     });
 }
 
-function setupSortableSections() {
-    const container = document.getElementById('section-container');
-    if (container) {
-        new Sortable(container, {
-            animation: 150,
-            handle: '.drag-handle',
-            ghostClass: 'sortable-ghost',
-            onEnd: autoSave, // Auto-save when order changes
+function syncMainLayoutFromModal() {
+    const mainContainer = document.getElementById('section-container');
+    document.querySelectorAll('#layout-list-container .layout-item').forEach(item => {
+        const targetId = item.dataset.targetId;
+        const targetSection = document.querySelector(`.form-section[data-section-id="${targetId}"]`);
+        if(targetSection) mainContainer.appendChild(targetSection);
+    });
+}
+
+function addSectionFromModal() {
+    const select = document.getElementById('add-section-select');
+    const sectionType = select.value;
+    const template = document.querySelector(`template#${sectionType}-template`);
+    if (!template) return;
+
+    const mainContainer = document.getElementById('section-container');
+    const tempDiv = document.createElement('div');
+    const newId = Date.now();
+    
+    let templateHtml = template.innerHTML
+        .replace(/{{- new_id -}}/g, newId)
+        .replace(/__INDEX__/g, newId);
+    
+    tempDiv.innerHTML = templateHtml;
+    const newSection = tempDiv.firstElementChild;
+    newSection.dataset.sectionId = `section-${newId}`;
+    mainContainer.appendChild(newSection);
+    
+    const addFirstItemBtn = newSection.querySelector('.btn-add-item');
+    if (addFirstItemBtn) addFirstItemBtn.click();
+
+    populateLayoutList();
+}
+
+
+// --- 2. DYNAMIC ITEM & REMOVAL LOGIC ---
+
+function setupDynamicItemControls() {
+    let deleteTimeout = null;
+
+    document.body.addEventListener('click', e => {
+        const button = e.target.closest('button');
+        if (!button) return;
+
+        if (button.matches('.btn-add-item')) {
+            const listContainer = button.parentElement.querySelector('.list-container');
+            const template = document.getElementById(button.dataset.template);
+            if (listContainer && template) {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = template.innerHTML.replace(/__INDEX__/g, Date.now());
+                listContainer.appendChild(tempDiv.firstElementChild);
+            }
+        }
+        
+        if (button.matches('.btn-add-responsibility')) {
+            const list = button.previousElementSibling;
+            const itemHTML = `
+                <div class="responsibility-item flex items-center gap-2">
+                    <input type="text" class="form-input flex-grow responsibility-input" placeholder="• New achievement...">
+                    <button type="button" class="btn-remove-item text-red-500" title="Remove Responsibility"><i class="fas fa-trash"></i></button>
+                </div>
+            `;
+            list.insertAdjacentHTML('beforeend', itemHTML);
+            list.lastElementChild.querySelector('input').focus();
+        }
+
+        if (button.matches('.btn-remove-item')) {
+            const elementToRemove = button.closest('.item-container, .responsibility-item');
+            showUndoToast(elementToRemove, "Entry removed.");
+        }
+
+        if (button.matches('.btn-remove-section-from-modal')) {
+            const layoutItem = button.closest('.layout-item');
+            const targetId = layoutItem.dataset.targetId;
+            const targetSection = document.querySelector(`.form-section[data-section-id="${targetId}"]`);
+            showUndoToast(targetSection, "Section removed.", () => {
+                layoutItem.remove(); // Also remove the item from the modal list
+            });
+        }
+    });
+
+    function showUndoToast(element, message, onConfirm) {
+        if (!element) return;
+
+        element.style.display = 'none';
+        document.querySelector('.toast-notification')?.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'toast-notification';
+        toast.innerHTML = `
+            <span>${message}</span>
+            <button class="undo-btn">Undo</button>
+        `;
+        document.body.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 10);
+
+        const undoBtn = toast.querySelector('.undo-btn');
+        undoBtn.addEventListener('click', () => {
+            clearTimeout(deleteTimeout);
+            element.style.display = '';
+            toast.remove();
         });
+
+        deleteTimeout = setTimeout(() => {
+            if (document.body.contains(element)) element.remove();
+            if (onConfirm) onConfirm();
+            toast.remove();
+        }, 5000);
     }
 }
 
-function setupSectionControls() {
-    // Add new section
-    const addBtn = document.getElementById('btn-add-section');
-    addBtn.addEventListener('click', () => {
-        const select = document.getElementById('add-section-select');
-        const sectionType = select.value;
-        const template = document.getElementById(`${sectionType}-template`);
-        
-        if (template) {
-            const container = document.getElementById('section-container');
-            const tempDiv = document.createElement('div');
-            
-            // THE FIX IS HERE: Create a unique ID for the new section's list
-            const newId = Date.now();
-            // Replace the placeholder in the template's HTML
-            let templateHtml = template.innerHTML.replace(/{{- new_id -}}/g, newId);
-            
-            // Also give the custom section a unique index
-            templateHtml = templateHtml.replace(/__INDEX__/g, newId);
 
-            tempDiv.innerHTML = templateHtml;
-            
-            // Add event listeners to the new section's controls
-            const newSection = tempDiv.firstElementChild;
-            newSection.querySelectorAll('.btn-add-item').forEach(button => {
-                 button.addEventListener('click', addListItem);
+function getSectionData(sectionEl) {
+    const type = sectionEl.dataset.sectionType;
+    let data = { type };
+
+    if (type === 'summary') {
+        data.content = sectionEl.querySelector('textarea')?.value || '';
+    } else if (type === 'custom') {
+        data.title = sectionEl.querySelector('.custom-title-input')?.value || '';
+        data.entries = [];
+        sectionEl.querySelectorAll('.item-container').forEach(itemEl => {
+            const entry = {};
+            itemEl.querySelectorAll('input[name], textarea[name]').forEach(input => {
+                const key = (input.name.match(/\[(\w+)\]$/) || [])[1];
+                if (key) entry[key] = input.value;
             });
-            newSection.querySelectorAll('input, textarea').forEach(input => {
-                input.addEventListener('input', autoSave);
-            });
-
-            container.appendChild(newSection);
-            // Add the first item automatically if it's a list-based section
-            const newAddButton = newSection.querySelector('.btn-add-item');
-            if(newAddButton && sectionType !== 'custom') {
-                newAddButton.click();
-            }
-
-            autoSave();
-        }
-    });
-
-    // Remove section or item (using event delegation)
-    document.body.addEventListener('click', event => {
-        const removeSectionBtn = event.target.closest('.btn-remove-section');
-        if (removeSectionBtn) {
-            if (confirm('Are you sure you want to remove this entire section?')) {
-                removeSectionBtn.closest('.form-section').remove();
-                autoSave();
-            }
-        }
-
-        const removeItemBtn = event.target.closest('.btn-remove-item');
-        if (removeItemBtn) {
-            removeItemBtn.closest('.item-container').remove();
-            autoSave();
-        }
-    });
-}
-
-function addListItem(event) {
-    const button = event.currentTarget;
-    const targetList = document.getElementById(button.dataset.target);
-    const template = document.getElementById(button.dataset.template);
-    if (!targetList || !template) {
-        console.error("Target list or template not found for", button);
-        return;
-    };
-
-    // Use a unique index based on time to avoid collisions
-    const newIndex = Date.now();
-    let cloneHtml = template.innerHTML.replace(/__INDEX__/g, newIndex);
-    
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = cloneHtml;
-    
-    tempDiv.querySelectorAll('input, textarea').forEach(input => {
-        input.addEventListener('input', autoSave);
-    });
-
-    targetList.appendChild(tempDiv.firstElementChild);
-    autoSave();
-}
-
-function getSectionListData(sectionElement, itemSelector, namePrefix) {
-    const items = sectionElement.querySelectorAll(itemSelector);
-    const data = [];
-    items.forEach((item) => {
-        const itemData = {};
-        const inputs = item.querySelectorAll('input, textarea');
-        inputs.forEach((input) => {
-            const nameMatch = input.name.match(new RegExp(`^${namePrefix}\\[.*\\]\\[(\\w+)\\]$`));
-            if (nameMatch) {
-                const key = nameMatch[1];
-                itemData[key] = input.value;
+            if (Object.values(entry).some(v => v && v.trim() !== '')) {
+                data.entries.push(entry);
             }
         });
-        if (Object.values(itemData).some(val => val && val.trim() !== '')) {
-            data.push(itemData);
-        }
-    });
+    } else {
+        data.entries = [];
+        sectionEl.querySelectorAll('.item-container').forEach(itemEl => {
+            const entry = {};
+            // Get all simple named inputs and textareas
+            itemEl.querySelectorAll('input[name], textarea[name]').forEach(input => {
+                const key = (input.name.match(/\[(\w+)\]$/) || [])[1];
+                if (key) entry[key] = input.value;
+            });
+
+            // THE FIX IS HERE: This now correctly finds all responsibility lists
+            // (for experience, projects, education, etc.) and assigns the points to the correct field.
+            itemEl.querySelectorAll('.responsibility-list').forEach(list => {
+                const fieldName = list.dataset.fieldName || 'responsibilities'; // Default to 'responsibilities'
+                const points = Array.from(list.querySelectorAll('.responsibility-input'))
+                    .map(input => input.value.trim())
+                    .filter(val => val);
+                
+                if (points.length > 0) {
+                     entry[fieldName] = points.join('\n');
+                }
+            });
+            
+            if (Object.values(entry).some(v => v && v.trim() !== '')) {
+                data.entries.push(entry);
+            }
+        });
+    }
     return data;
 }
+
 
 function handleFormSubmission() {
     const form = document.getElementById('resumeForm');
@@ -136,10 +235,9 @@ function handleFormSubmission() {
         
         const submitBtn = form.querySelector('.save-btn');
         submitBtn.classList.add('loading');
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
         submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
 
-        // Collect basic info
         const resumeData = {
             name: form.querySelector('[name="name"]').value,
             email: form.querySelector('[name="email"]').value,
@@ -151,37 +249,10 @@ function handleFormSubmission() {
             sections: []
         };
 
-        // Collect ordered sections
-        document.querySelectorAll('#section-container .form-section').forEach(sectionEl => {
-            const type = sectionEl.dataset.sectionType;
-            let sectionData = { type: type };
-
-            switch (type) {
-                case 'summary':
-                    sectionData.content = sectionEl.querySelector('textarea').value;
-                    break;
-                case 'experience':
-                    sectionData.entries = getSectionListData(sectionEl, '.experience-item', 'experience');
-                    break;
-                case 'projects':
-                    sectionData.entries = getSectionListData(sectionEl, '.project-item', 'projects');
-                    break;
-                case 'skills':
-                    sectionData.entries = getSectionListData(sectionEl, '.skill-item', 'skills');
-                    break;
-                case 'certificates':
-                    sectionData.entries = getSectionListData(sectionEl, '.certificate-item', 'certificates');
-                    break;
-                case 'education':
-                    sectionData.entries = getSectionListData(sectionEl, '.education-item', 'education');
-                    break;
-                case 'custom':
-                    sectionData.title = sectionEl.querySelector('.custom-title-input').value;
-                    sectionData.content = sectionEl.querySelector('.custom-content-textarea').value;
-                    break;
-            }
-            if ((sectionData.entries && sectionData.entries.length > 0) || (sectionData.content && sectionData.content.trim() !== '') || (sectionData.title && sectionData.title.trim() !== '')) {
-                resumeData.sections.push(sectionData);
+        document.querySelectorAll('#section-container > .form-section').forEach(sectionEl => {
+            const sectionData = getSectionData(sectionEl);
+            if ( (sectionData.entries && sectionData.entries.length > 0) || (sectionData.content && sectionData.content.trim() !== '') || (sectionData.title && sectionData.entries.length > 0) ) {
+                 resumeData.sections.push(sectionData);
             }
         });
 
@@ -204,7 +275,10 @@ function handleFormSubmission() {
                 body: JSON.stringify(resumeData),
             });
         })
-        .then(response => response.blob())
+        .then(response => {
+             if (!response.ok) throw new Error(`PDF export failed with status: ${response.status}`);
+             return response.blob();
+        })
         .then(blob => {
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -213,37 +287,23 @@ function handleFormSubmission() {
             document.body.appendChild(a);
             a.click();
             window.URL.revokeObjectURL(url);
+            a.remove();
             submitBtn.classList.remove('loading');
+            submitBtn.disabled = false;
             submitBtn.innerHTML = '<i class="fas fa-check"></i> Exported Successfully';
             setTimeout(() => {
                 submitBtn.innerHTML = '<i class="fas fa-save"></i> Save & Export Resume';
-                submitBtn.disabled = false;
-            }, 2000);
-            localStorage.removeItem('resumeAutoSave');
+            }, 2500);
         })
         .catch(error => {
             console.error('Error:', error);
             submitBtn.classList.remove('loading');
-            submitBtn.innerHTML = '<i class="fas fa-times"></i> Export Failed';
             submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-times"></i> Export Failed';
+            alert(`An error occurred during export: ${error.message}\n\nPlease check the console for more details.`);
+             setTimeout(() => {
+                submitBtn.innerHTML = '<i class="fas fa-save"></i> Save & Export Resume';
+            }, 3000);
         });
     });
 }
-
-function autoSave() {
-    console.log("Auto-saving triggered by section reorder or content change.");
-}
-
-function enhanceForm() {
-    const form = document.getElementById('resumeForm');
-    form.addEventListener('input', (e) => {
-        if (e.target.matches('input, textarea')) {
-            autoSave();
-        }
-    });
-}
-
-// Initialize the editor when the page loads
-document.addEventListener('DOMContentLoaded', () => {
-    initializeDynamicEditor();
-});

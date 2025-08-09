@@ -1,16 +1,23 @@
-<div class="form-section" data-section-type="custom">
+<div class="form-section" data-section-type="custom" data-section-id="custom-{{ section.id or 'new' }}">
     <div class="section-header">
-        <h3 class="section-header-title"><i class="fas fa-bars drag-handle"></i><i class="fas fa-star text-indigo-500"></i> Custom Section</h3>
-        <button type="button" class="btn-remove-section" title="Remove Section"><i class="fas fa-times"></i></button>
+        <div class="flex-grow flex items-center gap-2">
+            <i class="fas fa-star text-indigo-500"></i>
+            <input type="text" name="custom[__INDEX__][title]" class="form-input custom-title-input font-semibold" placeholder="e.g., Awards and Honors" value="{{ section.title or '' }}" required>
+        </div>
     </div>
-    <div class="section-content space-y-4">
-        <div>
-            <label class="block mb-1 font-medium text-gray-700">Section Title</label>
-            <input type="text" name="custom[title]" class="form-input custom-title-input" placeholder="e.g., Awards and Honors" value="{{ section.title or '' }}" required>
+    <div class="section-content">
+        <div class="list-container space-y-4">
+            {% for item in section.entries or [] %}
+            <div class="item-container custom-item">
+                 <button type="button" class="absolute top-2 right-2 btn-remove-item text-gray-400 hover:text-red-500" title="Remove Entry"><i class="fas fa-times-circle"></i></button>
+                <div class="flex-grow space-y-4">
+                    <div><label class="block mb-1 font-medium text-gray-700">Title</label><input type="text" name="custom[__INDEX__][subtitle]" value="{{ item.subtitle or '' }}" placeholder="e.g., First Place, National Hackathon" class="form-input"></div>
+                    <div><label class="block mb-1 font-medium text-gray-700">Date/Location</label><input type="text" name="custom[__INDEX__][date]" value="{{ item.date or '' }}" placeholder="e.g., May 2024 | New York, NY" class="form-input"></div>
+                    <div><label class="block mb-1 font-medium text-gray-700">Description</label><textarea name="custom[__INDEX__][description]" rows="2" class="form-input" placeholder="Optional brief description of the award or activity.">{{ item.description or '' }}</textarea></div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
-        <div>
-            <label class="block mb-1 font-medium text-gray-700">Content (one point per line)</label>
-            <textarea name="custom[content]" rows="4" class="form-input custom-content-textarea" placeholder="• Won first place in hackathon..." required>{{ section.content or '' }}</textarea>
-        </div>
+        <button type="button" class="btn-add-item mt-4" data-template="custom-item-template"><i class="fas fa-plus"></i> Add Entry</button>
     </div>
 </div>

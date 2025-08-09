@@ -6,6 +6,7 @@ def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, ex
     GEMINI_API_KEY = "AIzaSyDOhkVsVvV55-IHX3nRw2Zp1TynjoYUpF4"
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
+ 
     prompt = f"""
     You are an expert resume parser and data enhancement specialist. Your task is to meticulously extract, merge, and structure resume information from the provided texts into a precise JSON format — while tailoring the result to a given job title and experience level.
 
@@ -20,41 +21,24 @@ def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, ex
     - Parse and extract structured information from all provided sources.
     - Intelligently merge the data. The resume text is the primary source of truth.
     - Avoid duplicating information.
-    - If the resume lacks a strong professional summary, create a concise and impactful one tailored to the target job title and experience level.
+    - If the resume lacks a strong professional summary, create a concise and impactful one (2-3 sentences) tailored to the target job title and experience level.
 
     **ADDITIONAL CRITICAL RULES: Job Title & Experience Level Adaptation**
     - You MUST modify and enhance the extracted content so that:
-        1. **Summary**: 
-            - Always rewrite or adjust to highlight skills, tools, and accomplishments relevant to `job_title`.
-            - Match the tone to `experience_level`:
-                - Intern/Entry-Level → use phrases like "knowledgeable in", "comfortable with", "familiar with".
-                - Mid-Level → use "experienced in", "proficient with".
-                - Senior/Lead → use "expert in", "specialized in", "extensive experience with".
-            - Include keywords aligned with the target role for ATS optimization.
-        2. **Skills**:
-            - Ensure skills are relevant to `job_title` and realistically match `experience_level`.
-            - Remove irrelevant or outdated skills unless transferable and in demand for the role.
-            - Categorize skills as described below.
-        3. **Experience, Projects, Certificates**:
-            - Rewrite bullet points to align with `job_title` and `experience_level`.
-            - Follow the XYZ formula: "Accomplished X, measured by Y, by doing Z".
-            - Adjust scope based on level (e.g., entry-level → learning/contribution focus; senior → leadership/impact focus).
+        1. **Summary**: Rewrite or adjust to highlight skills, tools, and accomplishments relevant to `job_title`. Match the tone to `experience_level` (e.g., "knowledgeable in" for Intern, "proficient with" for Mid-level).
+        2. **Skills**: Ensure skills are relevant to `job_title` and realistically match `experience_level`.
+        3. **Experience, Projects**: Rewrite bullet points to align with `job_title` and `experience_level`. Focus on the XYZ formula: "Accomplished X, measured by Y, by doing Z".
 
     **CRITICAL RULE: Categorizing Skills**
     - Identify the top 12 most relevant technical skills from the provided text.
-    - Group these 12 skills into 3 distinct, relevant categories with a suitable subheader for each (e.g., "Programming Languages", "Web & APIs", "ML & Data Science").
-    - Each category should contain 4 skills.
-
-    **CRITICAL RULE: Identifying Certifications & Descriptions**
-    - Actively look for certifications that might be misplaced under "Education" or "Experience".
-    - If a certificate is found, move it to the `certificates` list.
-    - For each certificate, provide a one-sentence description summarizing its core topics. If no description exists, generate one.
+    - Group these skills into 3 distinct, relevant categories with a suitable subheader for each (e.g., "Programming Languages", "Web & APIs", "ML & Data Science").
+    - Each category must contain 4 skills.
 
     **CRITICAL RULE: Formatting Bullet Points**
-    - For fields using bullet points (`responsibilities`, `description`, `achievements`), place the `\\n` newline character ONLY at the end of a complete bullet point.
+    - For fields using bullet points (`responsibilities`, `description`, `achievements`), place the `\\n` newline character ONLY at the end of a complete bullet point. Do not start with it.
 
     **Final Output Format:**
-    Return a single, clean, and valid JSON object with these exact field names:
+    Return a single, clean, and valid JSON object with these exact field names. Pay close attention to the new date and link fields.
 
     - "name": string
     - "email": string
@@ -66,27 +50,30 @@ def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, ex
     - "summary": string
     - "skills": list of objects, each with:
         - "category": string
-        - "technologies": string (comma-separated string of skills for that category)
+        - "technologies": string (comma-separated string of skills)
     - "experience": list of objects, each with:
         - "title": string
         - "company": string
-        - "duration": string
+        - "date_from": string (e.g., "Jun 2022")
+        - "date_to": string (e.g., "Present" or "Aug 2023")
         - "responsibilities": string (formatted with `\\n`)
     - "education": list of objects, each with:
         - "degree": string
         - "school": string
-        - "year": string
+        - "date_from": string (e.g., "Aug 2018")
+        - "date_to": string (e.g., "May 2022")
         - "achievements": string (formatted with `\\n`, exclude certifications)
     - "projects": list of objects (max 5, sorted by relevance), each with:
         - "name": string
+        - "date_from": string (e.g., "May 2024")
+        - "date_to": string (e.g., "Present")
+        - "link": string (URL to the project if available, otherwise null)
         - "description": string (formatted with `\\n`)
-        - "technologies": string (comma-separated)
-        - "duration": string
     - "certificates": list of objects, each with:
         - "name": string
         - "issuer": string
-        - "year": string
-        - "description": string (two-sentence summary)
+        - "year": string (A single year, e.g., "2023". If a range is given like 2022-2023, use the end year "2023".)
+        - "description": string (one-sentence summary)
 
     **Input Data:**
 
@@ -107,7 +94,8 @@ def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, ex
 
     Respond ONLY with the JSON output. If a field is not found, return null or an empty list/string.
     """
-    # 
+   # 
+   
     body = {
         "contents": [
             {"parts": [{"text": prompt}]}

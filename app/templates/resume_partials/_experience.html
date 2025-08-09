@@ -5,8 +5,7 @@
         <div class="item">
             <div class="item-header">
                 <div class="item-title">{{ exp.title }}</div>
-                <div class="item-date">{{ exp.duration }}</div>
-            </div>
+                <div class="item-date">{{ exp.date_from or '' }} - {{ exp.date_to or '' }}</div>            </div>
             <div class="item-subtitle">{{ exp.company }}</div>
             {% if exp.responsibilities %}
             <div class="item-body">

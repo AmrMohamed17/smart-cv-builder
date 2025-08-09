@@ -4,12 +4,14 @@
         {% for proj in section.entries %}
         <div class="item">
             <div class="item-header">
-                <div class="item-title">{{ proj.name }}</div>
-                <div class="item-date">{{ proj.duration or '' }}</div>
+                <div class="item-title">
+                    {{ proj.name }}
+                    {% if proj.link %}
+                        <a href="{{ proj.link }}" target="_blank" style="font-style: italic; font-weight: normal; margin-left: 8px; color: #337ab7; text-decoration: none;">[Project Link]</a>
+                    {% endif %}
+                </div>
+                <div class="item-date">{{ proj.date_from or '' }}{% if proj.date_to %} - {{ proj.date_to }}{% endif %}</div>
             </div>
-            {% if proj.technologies %}
-            <div class="item-subtitle">Technologies: {{ proj.technologies }}</div>
-            {% endif %}
             {% if proj.description %}
             <div class="item-body">
                 <ul>
