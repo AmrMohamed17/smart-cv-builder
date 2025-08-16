@@ -27,12 +27,12 @@ def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, ex
     - You MUST modify and enhance the extracted content so that:
         1. **Summary**: Rewrite or adjust to highlight skills, tools, and accomplishments relevant to `job_title`. Match the tone to `experience_level` (e.g., "knowledgeable in" for Intern, "proficient with" for Mid-level).
         2. **Skills**: Ensure skills are relevant to `job_title` and realistically match `experience_level`.
-        3. **Experience, Projects**: Rewrite bullet points to align with `job_title` and `experience_level`. Focus on the XYZ formula: "Accomplished X, measured by Y, by doing Z".
+        3. **Experience, Projects, certificates**: Rewrite bullet points to align with `job_title` and `experience_level`. Focus on the XYZ formula: "Accomplished X, measured by Y, by doing Z".
 
     **CRITICAL RULE: Categorizing Skills**
-    - Identify the top 12 most relevant technical skills from the provided text.
-    - Group these skills into 3 distinct, relevant categories with a suitable subheader for each (e.g., "Programming Languages", "Web & APIs", "ML & Data Science").
-    - Each category must contain 4 skills.
+    - Identify the top 20 most relevant technical skills from the provided text and the target job title and experience level.
+    - Group these skills into 3-6 distinct, relevant categories with a suitable subheader for each (e.g., "Programming Languages", "ML & Data Science", etc..).
+    - Each category must contain 4-6 skills.
 
     **CRITICAL RULE: Formatting Bullet Points**
     - For fields using bullet points (`responsibilities`, `description`, `achievements`), place the `\\n` newline character ONLY at the end of a complete bullet point. Do not start with it.
@@ -73,7 +73,7 @@ def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, ex
         - "name": string
         - "issuer": string
         - "year": string (A single year, e.g., "2023". If a range is given like 2022-2023, use the end year "2023".)
-        - "description": string (one-sentence summary)
+        - "description": string (two-sentences summary)
 
     **Input Data:**
 

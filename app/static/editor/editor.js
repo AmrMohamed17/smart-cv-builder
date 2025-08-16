@@ -140,13 +140,26 @@ function setupDynamicItemControls() {
             const targetId = layoutItem.dataset.targetId;
             const targetSection = document.querySelector(`.form-section[data-section-id="${targetId}"]`);
             showUndoToast(targetSection, "Section removed.", () => {
-                layoutItem.remove(); // Also remove the item from the modal list
+                layoutItem.remove();
             });
+        }
+        
+        if (button.matches('.btn-remove-description')) {
+            const elementToRemove = button.closest('.description-field-container');
+            showUndoToast(elementToRemove, "Description removed.");
         }
     });
 
+    // CHANGE: This function is now modified to solve the bug
     function showUndoToast(element, message, onConfirm) {
         if (!element) return;
+
+        // Immediately "disarm" inputs by removing their 'name' attribute
+        const inputsToDisable = element.querySelectorAll('input[name], textarea[name]');
+        inputsToDisable.forEach(input => {
+            input.dataset.pendingName = input.name;
+            input.removeAttribute('name');
+        });
 
         element.style.display = 'none';
         document.querySelector('.toast-notification')?.remove();
@@ -164,6 +177,14 @@ function setupDynamicItemControls() {
         const undoBtn = toast.querySelector('.undo-btn');
         undoBtn.addEventListener('click', () => {
             clearTimeout(deleteTimeout);
+
+            // "Re-arm" the inputs by restoring their 'name' attribute
+            const inputsToRestore = element.querySelectorAll('[data-pending-name]');
+            inputsToRestore.forEach(input => {
+                input.setAttribute('name', input.dataset.pendingName);
+                delete input.dataset.pendingName;
+            });
+            
             element.style.display = '';
             toast.remove();
         });
@@ -176,6 +197,8 @@ function setupDynamicItemControls() {
     }
 }
 
+
+// --- 3. FORM SUBMISSION LOGIC ---
 
 function getSectionData(sectionEl) {
     const type = sectionEl.dataset.sectionType;
@@ -200,16 +223,13 @@ function getSectionData(sectionEl) {
         data.entries = [];
         sectionEl.querySelectorAll('.item-container').forEach(itemEl => {
             const entry = {};
-            // Get all simple named inputs and textareas
             itemEl.querySelectorAll('input[name], textarea[name]').forEach(input => {
                 const key = (input.name.match(/\[(\w+)\]$/) || [])[1];
                 if (key) entry[key] = input.value;
             });
 
-            // THE FIX IS HERE: This now correctly finds all responsibility lists
-            // (for experience, projects, education, etc.) and assigns the points to the correct field.
             itemEl.querySelectorAll('.responsibility-list').forEach(list => {
-                const fieldName = list.dataset.fieldName || 'responsibilities'; // Default to 'responsibilities'
+                const fieldName = list.dataset.fieldName || 'responsibilities';
                 const points = Array.from(list.querySelectorAll('.responsibility-input'))
                     .map(input => input.value.trim())
                     .filter(val => val);
