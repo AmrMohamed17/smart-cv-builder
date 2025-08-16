@@ -39,7 +39,7 @@ def upload():
             linkedin_text = extract_text(linkedin_path)
 
         if not github_username:
-            github_username = "No GitHub username provided."
+            github_data = "No GitHub username provided."
         else:
             print("Fetching GitHub data...")
             github_data = get_github_data(github_username, isTest=True)

@@ -1,9 +1,13 @@
 import requests
 from app.utils.file_helper import clean_json_output
+from os import getenv
 
 
 def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, experience_level):
-    GEMINI_API_KEY = "AIzaSyDOhkVsVvV55-IHX3nRw2Zp1TynjoYUpF4"
+    GEMINI_API_KEY = getenv("GEMINI_API_KEY")  
+    if not GEMINI_API_KEY:
+        raise ValueError("❌ GEMINI_API_KEY not found in environment variables")
+        
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
  
@@ -115,3 +119,4 @@ def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, ex
         print("❌ Failed to parse Gemini response:", e)
         print("📦 Raw Response Text:", response.text)
         raise e
+
