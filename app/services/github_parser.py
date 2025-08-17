@@ -1,10 +1,14 @@
 import requests
+from os import getenv
 
 GITHUB_API = "https://api.github.com"
 
 def get_user_repos(username, isTest=False):
     if isTest:
-        token = "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"
+        token = getenv("GitHub_Token")
+        if not token:
+            raise ValueError("❌ GitHub_Token not found in environment variables")
+            
         url = f"https://api.github.com/users/{username}/repos"
         headers = {"Authorization": f"token {token}"}
         response = requests.get(url, headers=headers)

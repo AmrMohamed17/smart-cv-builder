@@ -7,7 +7,7 @@ def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, ex
     GEMINI_API_KEY = getenv("GEMINI_API_KEY")  
     if not GEMINI_API_KEY:
         raise ValueError("❌ GEMINI_API_KEY not found in environment variables")
-        
+
     endpoint = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
 
  
@@ -67,7 +67,7 @@ def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, ex
         - "date_from": string (e.g., "Aug 2018")
         - "date_to": string (e.g., "May 2022")
         - "achievements": string (formatted with `\\n`, exclude certifications)
-    - "projects": list of objects (max 5, sorted by relevance), each with:
+    - "projects": list of objects (about 4, sorted by relevance), each with:
         - "name": string
         - "date_from": string (e.g., "May 2024")
         - "date_to": string (e.g., "Present")
