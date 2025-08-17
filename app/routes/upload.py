@@ -42,7 +42,7 @@ def upload():
             github_data = "No GitHub username provided."
         else:
             print("Fetching GitHub data...")
-            github_data = get_github_data(github_username, isTest=True)
+            github_data = get_github_data(github_username, isTest=False)
 
         print("🧾 Running Gemini LLM...")
         # print(f"linked: {linkedin_text}")

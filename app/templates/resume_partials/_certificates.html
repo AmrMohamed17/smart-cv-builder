@@ -4,10 +4,15 @@
         {% for cert in section.entries %}
         <div class="item">
             <div class="item-header">
-                <div class="item-title">{{ cert.name }}</div>
+                <!-- CHANGE: The logic for the title and issuer is now combined here -->
+                <div class="item-title">
+                    {{ cert.name }}
+                    <span style="font-size: 10pt; font-weight: normal; font-style: italic; color: #555;"> | {{ cert.issuer }}</span>
+                </div>
                 <div class="item-date">{{ cert.year }}</div>
             </div>
-            <div class="item-subtitle" style="margin-left: 1.5em;">{{ cert.issuer }}</div>
+            <!-- The old item-subtitle div has been removed -->
+            
             {% if cert.description %}
             <div class="item-body">
                 <ul>

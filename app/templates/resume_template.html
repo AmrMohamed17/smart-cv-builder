@@ -65,7 +65,6 @@
 
     <!-- ======================= DYNAMIC SECTIONS ======================= -->
     {% for section in resume_data.sections %}
-        {# THE FIX IS HERE: Check for section.entries instead of section.items #}
         {% if section.type == 'summary' and section.content %}
             {% include 'resume_partials/_summary.html' %}
         {% elif section.type == 'experience' and section.entries %}

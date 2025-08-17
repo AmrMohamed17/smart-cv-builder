@@ -1,5 +1,8 @@
 import requests
 from os import getenv
+from dotenv import load_dotenv
+
+load_dotenv()
 
 GITHUB_API = "https://api.github.com"
 
@@ -60,7 +63,7 @@ def summarize_github_repos(repos):
 
         readme_snippet = ""
         if repo["readme"]:
-            readme_snippet = repo["readme"][:700].strip().replace('\n', ' ')
+            readme_snippet = repo["readme"].strip().replace('\n', ' ')[:1000]
         else:
             readme_snippet = "No README"
 

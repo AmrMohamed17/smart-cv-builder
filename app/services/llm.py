@@ -1,7 +1,9 @@
 import requests
 from app.utils.file_helper import clean_json_output
 from os import getenv
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def parse_resume_with_llm(resume_text, github_text, linkedin_text, job_title, experience_level):
     GEMINI_API_KEY = getenv("GEMINI_API_KEY")  
